@@ -1,36 +1,46 @@
 import { fork } from "child_process";
 import path from "path";
 import { fetch } from "undici";
-import type { ChildProcess } from "child_process";
 
 describe("Pages Dev", () => {
-	let wranglerProcess: ChildProcess;
-	let ip: string;
-	let port: number;
-	let resolveReadyPromise: (value: unknown) => void;
-	const readyPromise = new Promise((resolve) => {
-		resolveReadyPromise = resolve;
-	});
+	it.concurrent(
+		"should work with `--node-compat` when running code requiring polyfills",
+		async () => {
+			const { ip, port, exit } = await runWranglerPagesDev(
+				"public",
+				"--node-compat",
+				"--port=0"
+			);
+			const response = await fetch(`http://${ip}:${port}/stripe`);
 
-	beforeAll(() => {
-		wranglerProcess = fork(
-			path.join("..", "..", "packages", "wrangler", "bin", "wrangler.js"),
-			["pages", "dev", "public", "--node-compat", "--port=0"],
-			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
-				cwd: path.resolve(__dirname, ".."),
-			}
-		).on("message", (message) => {
-			const parsedMessage = JSON.parse(message.toString());
-			ip = parsedMessage.ip;
-			port = parsedMessage.port;
-			resolveReadyPromise(undefined);
-		});
-	});
+			await expect(response.text()).resolves.toContain(
+				`"PATH":"path/to/some-file","STRIPE_OBJECT"`
+			);
 
-	afterAll(async () => {
-		await readyPromise;
-		await new Promise((resolve, reject) => {
+			await exit();
+		},
+		10000
+	);
+});
+
+async function runWranglerPagesDev(publicPath: string, ...options: string[]) {
+	let resolveReadyPromise: (value: { ip: string; port: number }) => void;
+	const ready = new Promise<{ ip: string; port: number }>(
+		(resolve) => (resolveReadyPromise = resolve)
+	);
+	const wranglerProcess = fork(
+		"../../packages/wrangler/bin/wrangler.js",
+		["pages", "dev", publicPath, ...options],
+		{
+			stdio: ["ignore", "ignore", "ignore", "ipc"],
+			cwd: path.resolve(__dirname, ".."),
+		}
+	).on("message", (message) => {
+		resolveReadyPromise(JSON.parse(message.toString()));
+	});
+	async function exit() {
+		await ready;
+		return new Promise((resolve, reject) => {
 			wranglerProcess.once("exit", (code) => {
 				if (!code) {
 					resolve(code);
@@ -40,17 +50,7 @@ describe("Pages Dev", () => {
 			});
 			wranglerProcess.kill("SIGTERM");
 		});
-	});
-
-	it.concurrent(
-		"should work with `--node-compat` when running code requiring polyfills",
-		async () => {
-			await readyPromise;
-			const response = await fetch(`http://${ip}:${port}/stripe`);
-
-			await expect(response.text()).resolves.toContain(
-				`"PATH":"path/to/some-file","STRIPE_OBJECT"`
-			);
-		}
-	);
-});
+	}
+	const { ip, port } = await ready;
+	return { ip, port, exit };
+}

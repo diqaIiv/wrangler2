@@ -17,7 +17,7 @@ describe("Pages Functions with custom _routes.json", () => {
 			path.join("..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["pages", "dev", "public", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, ".."),
 			}
 		).on("message", (message) => {
@@ -42,14 +42,18 @@ describe("Pages Functions with custom _routes.json", () => {
 		});
 	});
 
-	it.concurrent("should render static pages", async () => {
-		await readyPromise;
-		const response = await fetch(`http://${ip}:${port}/undefined-route`);
-		const text = await response.text();
-		expect(text).toContain(
-			"Bienvenue sur notre projet &#10024; pages-functions-with-routes-app!"
-		);
-	});
+	it.concurrent(
+		"should render static pages",
+		async () => {
+			await readyPromise;
+			const response = await fetch(`http://${ip}:${port}/undefined-route`);
+			const text = await response.text();
+			expect(text).toContain(
+				"Bienvenue sur notre projet &#10024; pages-functions-with-routes-app!"
+			);
+		},
+		10000
+	);
 
 	it.concurrent(
 		"should correctly apply the routing rules provided in the custom _routes.json file",
@@ -96,6 +100,7 @@ describe("Pages Functions with custom _routes.json", () => {
 			response = await fetch(`http://${ip}:${port}/greetings`);
 			text = await response.text();
 			expect(text).toEqual("[/functions/greetings]: Bonjour à tous!");
-		}
+		},
+		10000
 	);
 });

@@ -18,7 +18,7 @@ describe("'wrangler dev' correctly renders pages", () => {
 			path.join("..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["dev", "--local", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, ".."),
 			}
 		).on("message", (message) => {
@@ -43,10 +43,14 @@ describe("'wrangler dev' correctly renders pages", () => {
 		});
 	});
 
-	it.concurrent("renders ", async () => {
-		await readyPromise;
-		const response = await fetch(`http://${ip}:${port}/`);
-		const text = await response.text();
-		expect(text).toContain(`http://${ip}:${port}/`);
-	});
+	it.concurrent(
+		"renders ",
+		async () => {
+			await readyPromise;
+			const response = await fetch(`http://${ip}:${port}/`);
+			const text = await response.text();
+			expect(text).toContain(`http://${ip}:${port}/`);
+		},
+		10000
+	);
 });

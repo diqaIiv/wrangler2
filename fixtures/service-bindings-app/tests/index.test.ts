@@ -25,7 +25,7 @@ describe.skip("Service Bindings", () => {
 			path.join("..", "..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["dev", "index.ts", "--local", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, "..", "a"),
 			}
 		).on("message", (message) => {
@@ -39,7 +39,7 @@ describe.skip("Service Bindings", () => {
 			path.join("..", "..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["dev", "index.ts", "--local", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, "..", "b"),
 			}
 		).on("message", (message) => {

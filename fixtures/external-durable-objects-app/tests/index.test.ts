@@ -38,7 +38,7 @@ describe.skip("Pages Functions", () => {
 			path.join("..", "..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["dev", "index.ts", "--local", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, "..", "a"),
 			}
 		).on("message", (message) => {
@@ -51,7 +51,7 @@ describe.skip("Pages Functions", () => {
 			path.join("..", "..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["dev", "index.ts", "--local", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, "..", "b"),
 			}
 		).on("message", (message) => {
@@ -64,7 +64,7 @@ describe.skip("Pages Functions", () => {
 			path.join("..", "..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["dev", "index.ts", "--local", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, "..", "c"),
 			}
 		).on("message", (message) => {
@@ -83,7 +83,7 @@ describe.skip("Pages Functions", () => {
 				"--port=0",
 			],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, "..", "d"),
 			}
 		).on("message", (message) => {

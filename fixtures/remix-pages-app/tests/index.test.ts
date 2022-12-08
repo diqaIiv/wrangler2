@@ -23,7 +23,7 @@ describe("Remix", () => {
 			path.join("..", "..", "packages", "wrangler", "bin", "wrangler.js"),
 			["pages", "dev", "public", "--port=0"],
 			{
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
+				stdio: ["ignore", "ignore", "ignore", "ipc"],
 				cwd: path.resolve(__dirname, ".."),
 			}
 		).on("message", (message) => {
@@ -48,10 +48,14 @@ describe("Remix", () => {
 		});
 	});
 
-	it.concurrent("renders", async () => {
-		await readyPromise;
-		const response = await fetch(`http://${ip}:${port}/`);
-		const text = await response.text();
-		expect(text).toContain("Welcome to Remix");
-	});
+	it.concurrent(
+		"renders",
+		async () => {
+			await readyPromise;
+			const response = await fetch(`http://${ip}:${port}/`);
+			const text = await response.text();
+			expect(text).toContain("Welcome to Remix");
+		},
+		10000
+	);
 });
