@@ -1,61 +1,32 @@
-import { fork, spawnSync } from "child_process";
-import * as path from "path";
+import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
 import { fetch } from "undici";
-import type { ChildProcess } from "child_process";
+import { runWranglerPagesDev } from "../../shared/src/run-wrangler-pages-dev";
 
 const isWindows = process.platform === "win32";
 
 describe("Remix", () => {
-	let wranglerProcess: ChildProcess;
 	let ip: string;
 	let port: number;
-	let resolveReadyPromise: (value: unknown) => void;
-	const readyPromise = new Promise((resolve) => {
-		resolveReadyPromise = resolve;
-	});
+	let stop: () => void;
 
 	beforeAll(async () => {
 		spawnSync("npm", ["run", "build"], {
 			shell: isWindows,
-			cwd: path.resolve(__dirname, ".."),
+			cwd: resolve(__dirname, ".."),
 		});
-		wranglerProcess = fork(
-			path.join("..", "..", "packages", "wrangler", "bin", "wrangler.js"),
-			["pages", "dev", "public", "--port=0"],
-			{
-				stdio: ["ignore", "ignore", "ignore", "ipc"],
-				cwd: path.resolve(__dirname, ".."),
-			}
-		).on("message", (message) => {
-			const parsedMessage = JSON.parse(message.toString());
-			ip = parsedMessage.ip;
-			port = parsedMessage.port;
-			resolveReadyPromise(undefined);
-		});
+		({ ip, port, stop } = await runWranglerPagesDev(
+			resolve(__dirname, ".."),
+			"public",
+			["--port=0"]
+		));
 	});
 
-	afterAll(async () => {
-		await readyPromise;
-		await new Promise((resolve, reject) => {
-			wranglerProcess.once("exit", (code) => {
-				if (!code) {
-					resolve(code);
-				} else {
-					reject(code);
-				}
-			});
-			wranglerProcess.kill("SIGTERM");
-		});
-	});
+	afterAll(async () => await stop());
 
-	it.concurrent(
-		"renders",
-		async () => {
-			await readyPromise;
-			const response = await fetch(`http://${ip}:${port}/`);
-			const text = await response.text();
-			expect(text).toContain("Welcome to Remix");
-		},
-		10000
-	);
+	it("renders", async () => {
+		const response = await fetch(`http://${ip}:${port}/`);
+		const text = await response.text();
+		expect(text).toContain("Welcome to Remix");
+	});
 });
