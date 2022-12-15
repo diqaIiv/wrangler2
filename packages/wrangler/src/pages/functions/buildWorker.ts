@@ -247,9 +247,10 @@ export function buildNotifierPlugin(onEnd: () => void): Plugin {
 /**
  * Runs the script through a simple esbuild bundle step to check for unwanted imports.
  *
- * // TODO: Kill this once we have https://github.com/cloudflare/wrangler2/issues/2153
+ * This is useful when the user chooses not to bundle the `_worker.js` file by setting
+ * `--no-bundle` at the command line.
  */
-export async function checkWorker(scriptPath: string, onEnd: () => void) {
+export async function checkRawWorker(scriptPath: string, onEnd: () => void) {
 	await esBuild({
 		entryPoints: [scriptPath],
 		write: false,
@@ -271,9 +272,10 @@ const blockWorkerJsImports: Plugin = {
 			}
 			// Otherwise, block any imports that the file is requesting
 			logger.error(
-				`_worker.js is importing from another file. This will throw an error if deployed.\nYou should bundle your Worker or remove the import if it is unused.`
+				"The _worker.js is not being bundled by Wrangler but it is importing from another file.\n" +
+					"This will throw an error if deployed.\n" +
+					"You should bundle the Worker in a pre-build step, remove the import if it is unused, or ask Wrangler to bundle it by setting `--bundle`."
 			);
-			// Miniflare will error with this briefly down the line -- there's no point in continuing.
 			process.exit(1);
 		});
 	},

@@ -13,7 +13,7 @@ import { getBasePath } from "../paths";
 import { buildFunctions } from "./build";
 import { ROUTES_SPEC_VERSION, SECONDS_TO_WAIT_FOR_PROXY } from "./constants";
 import { FunctionsNoRoutesError, getFunctionsNoRoutesWarning } from "./errors";
-import { buildRawWorker, checkWorker } from "./functions/buildWorker";
+import { buildRawWorker, checkRawWorker } from "./functions/buildWorker";
 import { validateRoutes } from "./functions/routes-validation";
 import { CLEANUP, CLEANUP_CALLBACKS, pagesBetaWarning } from "./utils";
 import type { AdditionalDevProps } from "../dev";
@@ -79,7 +79,7 @@ export function Options(yargs: Argv) {
 				description:
 					"The location of the single Worker script if not using functions",
 			},
-			"bundle-worker": {
+			bundle: {
 				type: "boolean",
 				default: false,
 				description: "Whether to run bundling on a raw `_worker.js` script",
@@ -168,7 +168,7 @@ export const Handler = async ({
 	"inspector-port": inspectorPort,
 	proxy: requestedProxyPort,
 	"script-path": singleWorkerScriptPath,
-	bundleWorker,
+	bundle,
 	binding: bindings = [],
 	kv: kvs = [],
 	do: durableObjects = [],
@@ -261,10 +261,10 @@ export const Handler = async ({
 	if (usingWorkerScript) {
 		scriptPath = workerScriptPath;
 		let runBuild = async () => {
-			await checkWorker(workerScriptPath, () => scriptReadyResolve());
+			await checkRawWorker(workerScriptPath, () => scriptReadyResolve());
 		};
 
-		if (bundleWorker) {
+		if (bundle) {
 			// We want to actually run the `_worker.js` script through the bundler
 			// So update the final path to the script that will be uploaded and
 			// change the `runBuild()` function to bundle the `_worker.js`.

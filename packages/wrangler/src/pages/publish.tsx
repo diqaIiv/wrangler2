@@ -17,7 +17,7 @@ import { requireAuth } from "../user";
 import { buildFunctions } from "./build";
 import { PAGES_CONFIG_CACHE_FILENAME } from "./constants";
 import { FunctionsNoRoutesError, getFunctionsNoRoutesWarning } from "./errors";
-import { buildRawWorker, checkWorker } from "./functions/buildWorker";
+import { buildRawWorker, checkRawWorker } from "./functions/buildWorker";
 import { validateRoutes } from "./functions/routes-validation";
 import { listProjects } from "./projects";
 import { promptSelectProject } from "./prompt-select-project";
@@ -63,7 +63,7 @@ export function Options(yargs: Argv) {
 				type: "boolean",
 				description: "Skip asset caching which speeds up builds",
 			},
-			"bundle-worker": {
+			bundle: {
 				type: "boolean",
 				default: false,
 				description:
@@ -86,7 +86,7 @@ export const Handler = async ({
 	commitMessage,
 	commitDirty,
 	skipCaching,
-	bundleWorker,
+	bundle,
 	config: wranglerConfig,
 }: PublishArgs) => {
 	if (wranglerConfig) {
@@ -384,7 +384,7 @@ export const Handler = async ({
 	 */
 	if (_workerJS) {
 		let workerFileContents = _workerJS;
-		if (bundleWorker) {
+		if (bundle) {
 			const outfile = join(tmpdir(), `./bundledWorker-${Math.random()}.mjs`);
 			await buildRawWorker({
 				workerScriptPath,
@@ -397,7 +397,7 @@ export const Handler = async ({
 			});
 			workerFileContents = readFileSync(outfile, "utf8");
 		} else {
-			await checkWorker(workerScriptPath, () => {});
+			await checkRawWorker(workerScriptPath, () => {});
 		}
 
 		formData.append("_worker.js", new File([workerFileContents], "_worker.js"));

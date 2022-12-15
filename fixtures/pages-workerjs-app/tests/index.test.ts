@@ -13,11 +13,11 @@ describe("Pages _worker.js", () => {
 		).toThrowError();
 	});
 
-	it("should not throw an error when the _worker.js file imports something if --bundle-worker is true", async () => {
+	it("should not throw an error when the _worker.js file imports something if --bundle is true", async () => {
 		const { ip, port, stop } = await runWranglerPagesDev(
 			resolve(__dirname, ".."),
 			"./workerjs-test",
-			["--bundle-worker"]
+			["--bundle"]
 		);
 		await expect(
 			fetch(`http://${ip}:${port}/`).then((resp) => resp.text())
