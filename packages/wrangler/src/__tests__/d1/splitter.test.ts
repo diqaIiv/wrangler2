@@ -105,7 +105,7 @@ describe("splitSqlQuery()", () => {
         * Block comments are ignored;
         ****/
 			SELECT * FROM my_table /* semicolons; in; comments; don't count; */
-        WHERE val = 'foo;bar'`
+        WHERE val = 'foo;bar' AND count / 2 > 0`
 			)
 		).toMatchInlineSnapshot(`
 		Array [
@@ -113,7 +113,7 @@ describe("splitSqlQuery()", () => {
 		        * Block comments are ignored;
 		        ****/
 					SELECT * FROM my_table /* semicolons; in; comments; don't count; */
-		        WHERE val = 'foo;bar'",
+		        WHERE val = 'foo;bar' AND count / 2 > 0",
 		]
 	`);
 	});
@@ -123,13 +123,13 @@ describe("splitSqlQuery()", () => {
 			splitSqlQuery(
 				`
         INSERT INTO my_table (id, value) VALUES (42, 'foo');
-        SELECT * FROM my_table WHERE id = 42;
+        SELECT * FROM my_table WHERE id = 42 - 10;
       `
 			)
 		).toMatchInlineSnapshot(`
 		Array [
 		  "INSERT INTO my_table (id, value) VALUES (42, 'foo')",
-		  "SELECT * FROM my_table WHERE id = 42",
+		  "SELECT * FROM my_table WHERE id = 42 - 10",
 		]
 	`);
 	});
