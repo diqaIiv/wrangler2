@@ -65,15 +65,20 @@ function splitSqlIntoStatements(sql: string): string[] {
 				str += char;
 				next = iterator.next();
 				if (!next.done && next.value === "-") {
-					str += "-" + consumeUntilMarker(iterator, "\n");
+					str += next.value + consumeUntilMarker(iterator, "\n");
+					break;
+				} else {
+					continue;
 				}
-				break;
 			case `/`:
 				str += char;
+				next = iterator.next();
 				if (!next.done && next.value === "*") {
-					str += "*" + consumeUntilMarker(iterator, "*/");
+					str += next.value + consumeUntilMarker(iterator, "*/");
+					break;
+				} else {
+					continue;
 				}
-				break;
 			case `;`:
 				if (compoundStatementStack.length === 0) {
 					statements.push(str);

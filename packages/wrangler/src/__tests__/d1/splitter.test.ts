@@ -31,62 +31,90 @@ describe("mayContainMultipleStatements()", () => {
 	});
 });
 
-describe("splitSqlQuery", () => {
+describe("splitSqlQuery()", () => {
+	it("should return original SQL if there are no real statements", () => {
+		expect(splitSqlQuery(`;;;`)).toMatchInlineSnapshot(`
+		Array [
+		  ";;;",
+		]
+	`);
+	});
+
 	it("should not split single statements", () => {
-		expect(`SELECT * FROM my_table`).toMatchInlineSnapshot(
-			`"SELECT * FROM my_table"`
-		);
-		expect(`SELECT * FROM my_table WHERE id = 42;`).toMatchInlineSnapshot(
-			`"SELECT * FROM my_table WHERE id = 42;"`
-		);
+		expect(splitSqlQuery(`SELECT * FROM my_table`)).toMatchInlineSnapshot(`
+		Array [
+		  "SELECT * FROM my_table",
+		]
+	`);
+		expect(splitSqlQuery(`SELECT * FROM my_table WHERE id = 42;`))
+			.toMatchInlineSnapshot(`
+		Array [
+		  "SELECT * FROM my_table WHERE id = 42;",
+		]
+	`);
 		expect(
-			`
+			splitSqlQuery(
+				`
       SELECT * FROM my_table WHERE id = 42;
     `
+			)
 		).toMatchInlineSnapshot(`
-		"
+		Array [
+		  "
 		      SELECT * FROM my_table WHERE id = 42;
-		    "
+		    ",
+		]
 	`);
 	});
 
 	it("should handle strings", () => {
 		expect(
-			`
+			splitSqlQuery(
+				`
       SELECT * FROM my_table WHERE val = "foo;bar";
     `
+			)
 		).toMatchInlineSnapshot(`
-		"
-		      SELECT * FROM my_table WHERE val = \\"foo;bar\\";
-		    "
+		Array [
+		  "SELECT * FROM my_table WHERE val = \\"foo;bar\\"",
+		]
 	`);
 	});
 
 	it("should handle inline comments", () => {
 		expect(
-			`SELECT * FROM my_table -- semicolons; in; comments; don't count;
+			splitSqlQuery(
+				`SELECT * FROM my_table -- semicolons; in; comments; don't count;
         WHERE val = 'foo;bar'
         AND "col;name" = \`other;col\`; -- or identifiers (Postgres or MySQL style)`
+			)
 		).toMatchInlineSnapshot(`
-		"SELECT * FROM my_table -- semicolons; in; comments; don't count;
+		Array [
+		  "SELECT * FROM my_table -- semicolons; in; comments; don't count;
 		        WHERE val = 'foo;bar'
-		        AND \\"col;name\\" = \`other;col\`; -- or identifiers (Postgres or MySQL style)"
+		        AND \\"col;name\\" = \`other;col\`",
+		  "-- or identifiers (Postgres or MySQL style)",
+		]
 	`);
 	});
 
 	it("should handle block comments", () => {
 		expect(
-			`/****
+			splitSqlQuery(
+				`/****
         * Block comments are ignored;
         ****/
 			SELECT * FROM my_table /* semicolons; in; comments; don't count; */
         WHERE val = 'foo;bar'`
+			)
 		).toMatchInlineSnapshot(`
-		"/****
+		Array [
+		  "/****
 		        * Block comments are ignored;
 		        ****/
 					SELECT * FROM my_table /* semicolons; in; comments; don't count; */
-		        WHERE val = 'foo;bar'"
+		        WHERE val = 'foo;bar'",
+		]
 	`);
 	});
 
@@ -167,17 +195,17 @@ describe("splitSqlQuery", () => {
           CREATE TRIGGER <trigger_name> BEFORE UPDATE ON <table_name> FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
         `)
 		).toMatchInlineSnapshot(`
-    Array [
-      "CREATE OR REPLACE FUNCTION update_updated_at_column()
-              RETURNS TRIGGER AS $$
-              BEGIN
-                  NEW.updated_at = now();
-                  RETURN NEW;
-              END;
-              $$ language 'plpgsql'",
-      "CREATE TRIGGER <trigger_name> BEFORE UPDATE ON <table_name> FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column()",
-    ]
-  `);
+		    Array [
+		      "CREATE OR REPLACE FUNCTION update_updated_at_column()
+		              RETURNS TRIGGER AS $$
+		              BEGIN
+		                  NEW.updated_at = now();
+		                  RETURN NEW;
+		              END;
+		              $$ language 'plpgsql'",
+		      "CREATE TRIGGER <trigger_name> BEFORE UPDATE ON <table_name> FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column()",
+		    ]
+	  `);
 		expect(
 			splitSqlQuery(
 				`$SomeTag$Dianne's$WrongTag$;$some non tag an$identifier;; horse$SomeTag$;$SomeTag$Dianne's horse$SomeTag$`
