@@ -11,6 +11,7 @@ import { withConfig } from "../config";
 import { getLocalPersistencePath } from "../dev/get-local-persistence-path";
 import { confirm, logDim } from "../dialogs";
 import { logger } from "../logger";
+import { readFileSync } from "../parse";
 import { readableRelative } from "../paths";
 import { requireAuth } from "../user";
 import * as options from "./options";
@@ -25,7 +26,6 @@ import type { Database } from "./types";
 import type { Statement as StatementType } from "@miniflare/d1";
 import type { createSQLiteDB as createSQLiteDBType } from "@miniflare/shared";
 import type { Argv } from "yargs";
-import { readFileSync } from "../parse";
 
 type MiniflareNpxImportTypes = [
 	{

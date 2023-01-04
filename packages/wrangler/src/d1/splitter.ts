@@ -35,7 +35,7 @@ export default function splitSqlQuery(sql: string): string[] {
 function splitSqlIntoStatements(sql: string): string[] {
 	const statements: string[] = [];
 	let str = "";
-	let compoundStatementStack: ((str: string) => boolean)[] = [];
+	const compoundStatementStack: ((s: string) => boolean)[] = [];
 
 	const iterator = sql[Symbol.iterator]();
 	let next = iterator.next();
@@ -52,15 +52,15 @@ function splitSqlIntoStatements(sql: string): string[] {
 			case "`":
 				str += char + consumeUntilMarker(iterator, char);
 				break;
-			case `$`:
+			case `$`: {
 				const dollarQuote =
 					"$" + consumeWhile(iterator, isDollarQuoteIdentifier);
-				console.log(dollarQuote);
 				str += dollarQuote;
 				if (dollarQuote.endsWith("$")) {
 					str += consumeUntilMarker(iterator, dollarQuote);
 				}
 				break;
+			}
 			case `-`:
 				str += char;
 				next = iterator.next();
@@ -145,12 +145,12 @@ function isDollarQuoteIdentifier(str: string) {
  * Returns true if the `str` ends with a compound statement `BEGIN` marker.
  */
 function isCompoundStatementStart(str: string) {
-	return /[\r\s\n]BEGIN[\s\r\n]$/.test(str);
+	return /[\s]BEGIN[\s]$/.test(str);
 }
 
 /**
  * Returns true if the `str` ends with a compound statement `END` marker.
  */
 function isCompoundStatementEnd(str: string) {
-	return /[\s\r\n]END[;\s\r\n]$/.test(str);
+	return /[\s]END[;\s]$/.test(str);
 }
