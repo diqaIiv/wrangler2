@@ -163,7 +163,9 @@ export const ApplyHandler = withConfig<BaseSqlExecuteArgs>(
 				const err = e as ParseError;
 
 				success = false;
-				errorNotes = err.notes.map((msg) => msg.text);
+				errorNotes = err.notes?.map((msg) => msg.text) ?? [
+					err.message ?? err.toString(),
+				];
 			}
 
 			migration.Status = success ? "✅" : "❌";
